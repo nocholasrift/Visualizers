@@ -211,8 +211,6 @@ class Window(QMainWindow):
         if self.iteration == NUM_EDGES - 1:
             self.next_button.setEnabled(False)
 
-        print(self.iteration)
-
         self.prev_button.setEnabled(True)
 
         #self.lines[self.graph.mst_indices[self.iteration]] = (255, 0, 0, 255, 1)
@@ -240,17 +238,7 @@ class Window(QMainWindow):
 
     def prev(self):
 
-        self.iteration -= 1
-
-        if self.iteration == 0:
-            self.prev_button.setEnabled(False)
-
-        self.next_button.setEnabled(True)
-        self.play_button.setEnabled(True)
-
-        if self.iteration in self.graph.mst_indices:
-            self.lines[self.iteration] = (0,0,255,255,1)
-
+        self.lines[self.iteration] = (255,255,255,32,1)
         self.g.setData(
             pos=self.pos,
             adj=self.adj,
@@ -260,7 +248,28 @@ class Window(QMainWindow):
             pxMode=self.PIXEL_MODE,
         )
 
-        pg.QtGui.QApplication.processEvents()
+        self.iteration -= 1
+
+        if self.iteration == 0:
+            self.prev_button.setEnabled(False)
+
+        self.next_button.setEnabled(True)
+        self.play_button.setEnabled(True)
+
+        self.highlight_edge(self.iteration)
+        # if self.iteration in self.graph.mst_indices:
+        #     self.lines[self.iteration] = (0,0,255,255,1)
+
+        # self.g.setData(
+        #     pos=self.pos,
+        #     adj=self.adj,
+        #     brush=self.V_COLOR,
+        #     pen=self.lines,
+        #     size=self.SIZE,
+        #     pxMode=self.PIXEL_MODE,
+        # )
+
+        # pg.QtGui.QApplication.processEvents()
         self.update_edge_list(direction=True)
 
         # Need to signal thread of changes to lines and iteration
@@ -369,7 +378,6 @@ class Window(QMainWindow):
 
         if edge >= NUM_EDGES:
             return
-            
         self.lines[edge] = (0,0,255,255,1)
         self.g.setData(
             pos=self.pos,

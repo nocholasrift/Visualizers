@@ -35,3 +35,8 @@ class Worker(QtCore.QThread):
             time.sleep(.25)
 
         self.is_running = False
+
+# class EdgeAnimation(QtCore.QThread):
+
+#     def __init__(self,):
+#         QtCore.QThread.__init__(self, parent)
