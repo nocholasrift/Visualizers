@@ -87,6 +87,9 @@ class Graph:
         self.mst_indices = indices
         return min_tree
 
+    def prim(self):
+        
+
     def generate_vertices(self):
 
         verts = []

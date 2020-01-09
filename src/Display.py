@@ -26,7 +26,6 @@ NUM_EDGES = 0
 
 
 class Window(QMainWindow):
-
     def __init__(self):
 
         super(Window, self).__init__()
@@ -39,7 +38,7 @@ class Window(QMainWindow):
         p.setColor(self.backgroundRole(), QtCore.Qt.black)
         self.setPalette(p)
 
-        #self.initialize_layouts()
+        # self.initialize_layouts()
         self.central_widget = QtGui.QStackedWidget()
         self.setCentralWidget(self.central_widget)
         home_widget = HomeWidget(self)
@@ -50,7 +49,7 @@ class Window(QMainWindow):
         animation_widget = AnimationWidget(self)
 
         # setup buttons
-        #self.b1.hide()
+        # self.b1.hide()
 
         self.central_widget.addWidget(animation_widget)
         self.central_widget.setCurrentIndex(1)
@@ -59,6 +58,7 @@ class Window(QMainWindow):
     def return_home(self):
 
         self.central_widget.setCurrentIndex(0)
+
 
 class HomeWidget(QtGui.QWidget):
     def __init__(self, parent=None):
@@ -70,6 +70,7 @@ class HomeWidget(QtGui.QWidget):
         prim_button = QPushButton("Prim")
         layout.addWidget(prim_button)
         self.setLayout(layout)
+
 
 class AnimationWidget(QtGui.QWidget):
 
@@ -86,8 +87,8 @@ class AnimationWidget(QtGui.QWidget):
         self.graph = Graph.Graph(NUM_VERTICES, NUM_EDGES)
 
         # UI Colors
-        self.MST_EDGE_COLOR = (255,191,0,255,1)
-        self.DEFAULT_EDGE_COLOR = (255,255,255,32,1)
+        self.MST_EDGE_COLOR = (255, 191, 0, 255, 1)
+        self.DEFAULT_EDGE_COLOR = (255, 255, 255, 32, 1)
 
         self.init_layout()
 
@@ -99,7 +100,7 @@ class AnimationWidget(QtGui.QWidget):
         self.fade_in()
         self.highlight_edge(self.iteration)
         # Labels
-        #TODO: Add animation for labels
+        # TODO: Add animation for labels
         self.edge_table_label.show()
         for i in range(len(self.edge_label_array)):
             self.edge_label_array[i].show()
@@ -116,37 +117,40 @@ class AnimationWidget(QtGui.QWidget):
             ind, label = item
 
             edge = self.graph.graph[ind]
-            label_str = label_str = str(edge[0]) + "\t" + str(edge[1]) + "\t" + str(edge[2])
+            label_str = label_str = (
+                str(edge[0]) + "\t" + str(edge[1]) + "\t" + str(edge[2])
+            )
             label.setText(label_str)
             if ind == 0:
-                label.setStyleSheet('QLabel#tmp {color: white; background-color: rgba(255,255,255,20);}')
+                label.setStyleSheet(
+                    "QLabel#tmp {color: white; background-color: rgba(255,255,255,20);}"
+                )
             else:
-                label.setStyleSheet('QLabel#tmp {color: white}')
+                label.setStyleSheet("QLabel#tmp {color: white}")
             label.hide()
 
         self.iteration = 0
         for item in enumerate(self.lines):
-            self.lines[item[0]] = (255,255,255,0,1)
+            self.lines[item[0]] = (255, 255, 255, 0, 1)
 
         self.g.setData(
             pos=self.pos,
             adj=self.adj,
-            brush=(0,0,0,0),
+            brush=(0, 0, 0, 0),
             pen=self.lines,
             size=self.SIZE,
             pxMode=self.PIXEL_MODE,
         )
         pg.QtGui.QApplication.processEvents()
 
-        #self.update_edge_list(False)
-
+        # self.update_edge_list(False)
 
     def init_layout(self):
 
         animation_layout = QVBoxLayout()
 
         self.home_button = QtGui.QPushButton()
-        self.home_button.setIcon(QtGui.QIcon('meta/homebutton.png'))
+        self.home_button.setIcon(QtGui.QIcon("meta/homebutton.png"))
         self.home_button.clicked.connect(self.parent().return_home)
         self.home_button.setEnabled(False)
         animation_layout.addWidget(self.home_button, alignment=QtCore.Qt.AlignLeft)
@@ -157,8 +161,8 @@ class AnimationWidget(QtGui.QWidget):
         self.edge_table = QVBoxLayout()
 
         self.edge_table_label = QLabel("V 1\tV 2\tCost")
-        self.edge_table_label.setObjectName('edge_table_label')
-        self.edge_table_label.setStyleSheet('QLabel#edge_table_label {color: white}')
+        self.edge_table_label.setObjectName("edge_table_label")
+        self.edge_table_label.setStyleSheet("QLabel#edge_table_label {color: white}")
         self.edge_table_label.hide()
         self.edge_table.addWidget(self.edge_table_label)
 
@@ -168,11 +172,13 @@ class AnimationWidget(QtGui.QWidget):
             edge = self.graph.graph[i]
             label_str = str(edge[0]) + "\t" + str(edge[1]) + "\t" + str(edge[2])
             tmp = QLabel(label_str)
-            tmp.setObjectName('tmp')
+            tmp.setObjectName("tmp")
             if i == 0:
-                tmp.setStyleSheet('QLabel#tmp {color: white; background-color: rgba(255,255,255,20);}')
+                tmp.setStyleSheet(
+                    "QLabel#tmp {color: white; background-color: rgba(255,255,255,20);}"
+                )
             else:
-                tmp.setStyleSheet('QLabel#tmp {color: white}')
+                tmp.setStyleSheet("QLabel#tmp {color: white}")
             tmp.hide()
             self.edge_label_array.append(tmp)
             self.edge_table.addWidget(tmp)
@@ -282,23 +288,23 @@ class AnimationWidget(QtGui.QWidget):
     def update_edge_list(self, direction):
 
         if not direction:
-            for i in range(len(self.edge_label_array)-1):
-                self.edge_label_array[i].setText(self.edge_label_array[i+1].text())
+            for i in range(len(self.edge_label_array) - 1):
+                self.edge_label_array[i].setText(self.edge_label_array[i + 1].text())
 
-            if len(self.lines)-self.iteration > 4:
-                u,v,w = self.graph.graph[self.iteration+4]
-                new_string = str(u)+"\t"+str(v)+"\t"+str(w)
+            if len(self.lines) - self.iteration > 4:
+                u, v, w = self.graph.graph[self.iteration + 4]
+                new_string = str(u) + "\t" + str(v) + "\t" + str(w)
                 self.edge_label_array[-1].setText(new_string)
             else:
                 self.edge_label_array[-1].setText("")
 
-        #TODO: Breaking when at end of demonstration
+        # TODO: Breaking when at end of demonstration
         if direction:
-            for i in reversed(range(1,len(self.edge_label_array))):
-                self.edge_label_array[i].setText(self.edge_label_array[i-1].text())
+            for i in reversed(range(1, len(self.edge_label_array))):
+                self.edge_label_array[i].setText(self.edge_label_array[i - 1].text())
 
-            u,v,w = self.graph.graph[self.iteration]
-            new_string = str(u)+"\t"+str(v)+"\t"+str(w)
+            u, v, w = self.graph.graph[self.iteration]
+            new_string = str(u) + "\t" + str(v) + "\t" + str(w)
             self.edge_label_array[0].setText(new_string)
 
     def init_play_thread(self):
@@ -368,7 +374,7 @@ class AnimationWidget(QtGui.QWidget):
 
     def prev(self):
 
-        if self.iteration <= NUM_EDGES -1:
+        if self.iteration <= NUM_EDGES - 1:
             self.lines[self.iteration] = self.DEFAULT_EDGE_COLOR
 
         self.g.setData(
@@ -469,7 +475,7 @@ class AnimationWidget(QtGui.QWidget):
 
         if edge >= NUM_EDGES:
             return
-        self.lines[edge] = (0,255,255,255,1)#(0,0,255,255,1)
+        self.lines[edge] = (0, 255, 255, 255, 1)  # (0,0,255,255,1)
         self.g.setData(
             pos=self.pos,
             adj=self.adj,
@@ -480,6 +486,7 @@ class AnimationWidget(QtGui.QWidget):
         )
         pg.QtGui.QApplication.processEvents()
 
+
 # Start Qt event loop unless running in interactive mode or using pyside.
 def main():
 
@@ -487,6 +494,7 @@ def main():
     window = Window()
     window.show()
     app.exec_()
+
 
 if __name__ == "__main__":
     import sys
