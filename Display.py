@@ -20,23 +20,63 @@ import Graph
 import Worker
 import time
 
-NUM_VERTICES = 30
+NUM_VERTICES = 15
 # Must be at least NUM_VERTICES - 1
 NUM_EDGES = 0
 
 
 class Window(QMainWindow):
 
-    sig = QtCore.pyqtSignal(object)
-
     def __init__(self):
 
         super(Window, self).__init__()
         self.setGeometry(50, 50, 1024, 760)
-        self.setWindowTitle("Kruskal Visualization")
-        self.setWindowIcon(QtGui.QIcon("pythonlogo.png"))
+        self.setWindowTitle("ALgorithm Visualizations")
+        self.setWindowIcon(QtGui.QIcon("treelogo.png"))
 
-        # initialize graph configurations
+        self.setAutoFillBackground(True)
+        p = self.palette()
+        p.setColor(self.backgroundRole(), QtCore.Qt.black)
+        self.setPalette(p)
+
+        #self.initialize_layouts()
+        self.central_widget = QtGui.QStackedWidget()
+        self.setCentralWidget(self.central_widget)
+        home_widget = HomeWidget(self)
+        self.central_widget.addWidget(home_widget)
+
+    def start(self):
+
+        animation_widget = AnimationWidget(self)
+
+        # setup buttons
+        #self.b1.hide()
+
+        self.central_widget.addWidget(animation_widget)
+        self.central_widget.setCurrentIndex(1)
+        self.central_widget.currentWidget().launch()
+
+    def return_home(self):
+
+        self.central_widget.setCurrentIndex(0)
+
+class HomeWidget(QtGui.QWidget):
+    def __init__(self, parent=None):
+        super(HomeWidget, self).__init__(parent)
+        layout = QtGui.QHBoxLayout()
+        kruskal_button = QPushButton("Kruskal")
+        kruskal_button.clicked.connect(self.parent().start)
+        layout.addWidget(kruskal_button)
+        prim_button = QPushButton("Prim")
+        layout.addWidget(prim_button)
+        self.setLayout(layout)
+
+class AnimationWidget(QtGui.QWidget):
+
+    sig = QtCore.pyqtSignal(object)
+
+    def __init__(self, parent=None):
+        super(AnimationWidget, self).__init__(parent)
         self.lines = []
         self.pos = []
         self.adj = []
@@ -45,15 +85,74 @@ class Window(QMainWindow):
         self.SIZE = 10
         self.graph = Graph.Graph(NUM_VERTICES, NUM_EDGES)
 
-        self.setAutoFillBackground(True)
-        p = self.palette()
-        p.setColor(self.backgroundRole(), QtCore.Qt.black)
-        self.setPalette(p)
+        # UI Colors
+        self.MST_EDGE_COLOR = (255,191,0,255,1)
+        self.DEFAULT_EDGE_COLOR = (255,255,255,32,1)
 
-        self.layout = QVBoxLayout()
+        self.init_layout()
 
-        self.graph_layout = QHBoxLayout()
-        self.graph_layout.addWidget(self.home())
+    def launch(self):
+
+        self.reset()
+
+        # animations
+        self.fade_in()
+        self.highlight_edge(self.iteration)
+        # Labels
+        #TODO: Add animation for labels
+        self.edge_table_label.show()
+        for i in range(len(self.edge_label_array)):
+            self.edge_label_array[i].show()
+
+        self.home_button.setEnabled(True)
+
+    def reset(self):
+
+        self.edge_table_label.hide()
+        # for i in range(len(self.edge_label_array)):
+        #     self.edge_label_array[i].hide()
+
+        for item in enumerate(self.edge_label_array):
+            ind, label = item
+
+            edge = self.graph.graph[ind]
+            label_str = label_str = str(edge[0]) + "\t" + str(edge[1]) + "\t" + str(edge[2])
+            label.setText(label_str)
+            if ind == 0:
+                label.setStyleSheet('QLabel#tmp {color: white; background-color: rgba(255,255,255,20);}')
+            else:
+                label.setStyleSheet('QLabel#tmp {color: white}')
+            label.hide()
+
+        self.iteration = 0
+        for item in enumerate(self.lines):
+            self.lines[item[0]] = (255,255,255,0,1)
+
+        self.g.setData(
+            pos=self.pos,
+            adj=self.adj,
+            brush=(0,0,0,0),
+            pen=self.lines,
+            size=self.SIZE,
+            pxMode=self.PIXEL_MODE,
+        )
+        pg.QtGui.QApplication.processEvents()
+
+        #self.update_edge_list(False)
+
+
+    def init_layout(self):
+
+        animation_layout = QVBoxLayout()
+
+        self.home_button = QtGui.QPushButton()
+        self.home_button.setIcon(QtGui.QIcon('homebutton.png'))
+        self.home_button.clicked.connect(self.parent().return_home)
+        self.home_button.setEnabled(False)
+        animation_layout.addWidget(self.home_button, alignment=QtCore.Qt.AlignLeft)
+
+        graph_layout = QHBoxLayout()
+        graph_layout.addWidget(self.init_graph())
 
         self.edge_table = QVBoxLayout()
 
@@ -70,26 +169,43 @@ class Window(QMainWindow):
             label_str = str(edge[0]) + "\t" + str(edge[1]) + "\t" + str(edge[2])
             tmp = QLabel(label_str)
             tmp.setObjectName('tmp')
-            tmp.setStyleSheet('QLabel#tmp {color: white}')
+            if i == 0:
+                tmp.setStyleSheet('QLabel#tmp {color: white; background-color: rgba(255,255,255,20);}')
+            else:
+                tmp.setStyleSheet('QLabel#tmp {color: white}')
             tmp.hide()
             self.edge_label_array.append(tmp)
             self.edge_table.addWidget(tmp)
 
-        self.graph_layout.addLayout(self.edge_table)
+        graph_layout.addLayout(self.edge_table)
 
         # self.b2 = QPushButton("Begin")
         # layout.addWidget(self.home())
-        self.layout.addLayout(self.graph_layout)
+        animation_layout.addLayout(graph_layout)
 
-        self.b1 = QPushButton("Start")
-        self.b1.clicked.connect(self.start)
-        self.layout.addWidget(self.b1)
+        self.next_button = QPushButton("Next")
+        self.next_button.clicked.connect(self.next)
+        self.prev_button = QPushButton("Back")
+        self.prev_button.clicked.connect(self.prev)
+        self.play_button = QPushButton("Play")
+        self.prev_button.setEnabled(False)
+        self.play_button.clicked.connect(self.play)
+        self.pause_button = QPushButton("Pause")
+        self.pause_button.clicked.connect(self.pause)
+        self.pause_button.hide()
+        self.button_array = QHBoxLayout()
+        self.button_array.addWidget(self.prev_button)
+        self.button_array.addWidget(self.play_button)
+        self.button_array.addWidget(self.pause_button)
+        self.button_array.addWidget(self.next_button)
+        animation_layout.addLayout(self.button_array)
 
-        widget = QWidget()
-        widget.setLayout(self.layout)
-        self.setCentralWidget(widget)
+        # b1 = QPushButton("Start")
+        # b1.clicked.connect(start)
+        # animation_layout.addWidget(b1)
+        self.setLayout(animation_layout)
 
-    def home(self):
+    def init_graph(self):
 
         global NUM_EDGES
         # Enable antialiasing for prettier plots
@@ -162,43 +278,57 @@ class Window(QMainWindow):
 
         return w
 
-    def start(self):
+    # direction: False = forward, True = backwards
+    def update_edge_list(self, direction):
 
-        self.iteration = 0
+        if not direction:
+            for i in range(len(self.edge_label_array)-1):
+                self.edge_label_array[i].setText(self.edge_label_array[i+1].text())
 
-        # setup thread
+            if len(self.lines)-self.iteration > 4:
+                u,v,w = self.graph.graph[self.iteration+4]
+                new_string = str(u)+"\t"+str(v)+"\t"+str(w)
+                self.edge_label_array[-1].setText(new_string)
+            else:
+                self.edge_label_array[-1].setText("")
+
+        #TODO: Breaking when at end of demonstration
+        if direction:
+            for i in reversed(range(1,len(self.edge_label_array))):
+                self.edge_label_array[i].setText(self.edge_label_array[i-1].text())
+
+            u,v,w = self.graph.graph[self.iteration]
+            new_string = str(u)+"\t"+str(v)+"\t"+str(w)
+            self.edge_label_array[0].setText(new_string)
+
+    def init_play_thread(self):
+
         self.thread = Worker.Worker(NUM_VERTICES, self.lines, self.graph)
         self.sig.connect(self.thread.on_source)
         self.sig.emit((self.lines, self.iteration))
         self.thread.is_running = False
 
-        # setup buttons
-        self.b1.hide()
-        self.next_button = QPushButton("Next")
-        self.next_button.clicked.connect(self.next)
-        self.prev_button = QPushButton("Back")
-        self.prev_button.clicked.connect(self.prev)
-        self.play_button = QPushButton("Play")
-        self.prev_button.setEnabled(False)
-        self.play_button.clicked.connect(self.play)
-        self.pause_button = QPushButton("Pause")
-        self.pause_button.clicked.connect(self.pause)
-        self.pause_button.hide()
-        self.button_array = QHBoxLayout()
-        self.button_array.addWidget(self.prev_button)
-        self.button_array.addWidget(self.play_button)
-        self.button_array.addWidget(self.pause_button)
-        self.button_array.addWidget(self.next_button)
-        self.layout.addLayout(self.button_array)
+    def update_data(self, payload):
 
-        # animations
-        self.fade_in()
+        self.lines, self.iteration = payload[0], payload[1]
+
+        self.g.setData(
+            pos=self.pos,
+            adj=self.adj,
+            brush=self.V_COLOR,
+            pen=self.lines,
+            size=self.SIZE,
+            pxMode=self.PIXEL_MODE,
+        )
+        pg.QtGui.QApplication.processEvents()
+        self.update_edge_list(direction=False)
         self.highlight_edge(self.iteration)
-        # Labels
-        #TODO: Add animation for labels
-        self.edge_table_label.show()
-        for i in range(len(self.edge_label_array)):
-            self.edge_label_array[i].show()
+
+        if self.iteration == len(self.lines):
+            self.pause_button.hide()
+            self.play_button.show()
+            self.play_button.setEnabled(False)
+            self.prev_button.setEnabled(True)
 
     def stop_thread():
 
@@ -210,15 +340,14 @@ class Window(QMainWindow):
 
         if self.iteration == NUM_EDGES - 1:
             self.next_button.setEnabled(False)
+            self.play_button.setEnabled(False)
 
         self.prev_button.setEnabled(True)
 
-        #self.lines[self.graph.mst_indices[self.iteration]] = (255, 0, 0, 255, 1)
-        #print(self.graph.mst_indices)
         if self.iteration in self.graph.mst_indices:
-            self.lines[self.iteration] = (255,0,0,255,1)
+            self.lines[self.iteration] = self.MST_EDGE_COLOR
         else:
-            self.lines[self.iteration] = (255,255,255,32,1)
+            self.lines[self.iteration] = self.DEFAULT_EDGE_COLOR
 
         self.g.setData(
             pos=self.pos,
@@ -228,17 +357,20 @@ class Window(QMainWindow):
             size=self.SIZE,
             pxMode=self.PIXEL_MODE,
         )
-        pg.QtGui.QApplication.processEvents()
+        # pg.QtGui.QApplication.processEvents()
         self.iteration += 1
         self.update_edge_list(direction=False)
         self.highlight_edge(self.iteration)
 
+        # TODO: May not need this anymore
         # Need to signal thread of changes to lines and iteration
         self.sig.emit((self.lines, self.iteration))
 
     def prev(self):
 
-        self.lines[self.iteration] = (255,255,255,32,1)
+        if self.iteration <= NUM_EDGES -1:
+            self.lines[self.iteration] = self.DEFAULT_EDGE_COLOR
+
         self.g.setData(
             pos=self.pos,
             adj=self.adj,
@@ -257,21 +389,11 @@ class Window(QMainWindow):
         self.play_button.setEnabled(True)
 
         self.highlight_edge(self.iteration)
-        # if self.iteration in self.graph.mst_indices:
-        #     self.lines[self.iteration] = (0,0,255,255,1)
-
-        # self.g.setData(
-        #     pos=self.pos,
-        #     adj=self.adj,
-        #     brush=self.V_COLOR,
-        #     pen=self.lines,
-        #     size=self.SIZE,
-        #     pxMode=self.PIXEL_MODE,
-        # )
 
         # pg.QtGui.QApplication.processEvents()
         self.update_edge_list(direction=True)
 
+        # TODO: May not need this anymore
         # Need to signal thread of changes to lines and iteration
         self.sig.emit((self.lines, self.iteration))
 
@@ -279,45 +401,12 @@ class Window(QMainWindow):
 
         self.prev_button.setEnabled(False)
         self.next_button.setEnabled(False)
+        self.init_play_thread()
         self.thread.is_running = True
         self.thread.start()
         self.thread.sig.connect(self.update_data)
         self.play_button.hide()
         self.pause_button.show()
-
-    def update_data(self, payload):
-
-        self.lines, self.iteration = payload[0], payload[1]
-        self.g.setData(
-            pos=self.pos,
-            adj=self.adj,
-            brush=self.V_COLOR,
-            pen=self.lines,
-            size=self.SIZE,
-            pxMode=self.PIXEL_MODE,
-        )
-        pg.QtGui.QApplication.processEvents()
-        self.update_edge_list(direction=False)
-
-        if self.iteration == NUM_VERTICES - 2:
-            self.pause_button.hide()
-            self.play_button.show()
-            self.play_button.setEnabled(False)
-            self.prev_button.setEnabled(True)
-
-    # direction: False = forward, True = backwards
-    def update_edge_list(self, direction):
-
-        if not direction:
-            for i in range(len(self.edge_label_array)-1):
-                self.edge_label_array[i].setText(self.edge_label_array[i+1].text())
-
-            if len(self.lines)-self.iteration >= 5:
-                u,v,w = self.graph.graph[self.iteration]
-                new_string = str(u)+"\t"+str(v)+"\t"+str(w)
-                self.edge_label_array[-1].setText(new_string)
-            else:
-                self.edge_label_array[-1].setText("")
 
     def pause(self):
 
@@ -331,13 +420,15 @@ class Window(QMainWindow):
 
             if self.iteration < NUM_EDGES - 1:
                 self.next_button.setEnabled(True)
+
+            self.stop_thread()
         except:
             pass
 
     def fade_in(self):
         self.next_button.setEnabled(False)
         self.play_button.setEnabled(False)
-        self.pause_button.setEnabled(False)
+        self.prev_button.setEnabled(False)
 
         i = 5
         while i <= 255:
@@ -364,7 +455,7 @@ class Window(QMainWindow):
                 pxMode=self.PIXEL_MODE,
             )
             pg.QtGui.QApplication.processEvents()
-            i += 1
+            i += 2
             time.sleep(0.03)
 
         for i in range(len(self.lines)):
@@ -378,7 +469,7 @@ class Window(QMainWindow):
 
         if edge >= NUM_EDGES:
             return
-        self.lines[edge] = (0,0,255,255,1)
+        self.lines[edge] = (0,255,255,255,1)#(0,0,255,255,1)
         self.g.setData(
             pos=self.pos,
             adj=self.adj,
@@ -396,7 +487,6 @@ def main():
     window = Window()
     window.show()
     app.exec_()
-
 
 if __name__ == "__main__":
     import sys
