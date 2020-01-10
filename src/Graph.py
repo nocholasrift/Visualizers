@@ -88,7 +88,7 @@ class Graph:
         return min_tree
 
     def prim(self):
-        
+        pass
 
     def generate_vertices(self):
 
