@@ -94,6 +94,7 @@ class AnimationWidget(QtGui.QWidget):
 
     def launch(self):
 
+        self.home_button.setEnabled(False)
         self.reset()
 
         # animations
@@ -407,6 +408,7 @@ class AnimationWidget(QtGui.QWidget):
 
         self.prev_button.setEnabled(False)
         self.next_button.setEnabled(False)
+        self.home_button.setEnabled(False)
         self.init_play_thread()
         self.thread.is_running = True
         self.thread.start()
@@ -423,6 +425,7 @@ class AnimationWidget(QtGui.QWidget):
             self.play_button.show()
             self.play_flag = False
             self.prev_button.setEnabled(True)
+            self.home_button.setEnabled(True)
 
             if self.iteration < NUM_EDGES - 1:
                 self.next_button.setEnabled(True)

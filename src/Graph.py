@@ -2,6 +2,7 @@
 #graph code from https://www.geeksforgeeks.org/
 from scipy.spatial import Delaunay
 import random
+import sys
 import PyQt5 as qt
 import numpy as np
 
@@ -52,6 +53,7 @@ class Graph:
 
     def kruskal(self):
 
+        self.mst = []
         min_tree = []
         indices = []
 
@@ -87,9 +89,30 @@ class Graph:
         self.mst_indices = indices
         return min_tree
 
+    # Modified geeks for geeks code
+    # https://www.geeksforgeeks.org/prims-minimum-spanning-tree-mst-greedy-algo-5/
     def prim(self):
-        pass
 
+        self.mst = []
+        vertice_set = []
+        weights = [sys.maxint] * self.V
+        weights[0] = 0
+
+        for src in range(self.V):
+
+            u = self.minKey(vertice_set, weights)
+            vertice_set.append(src)
+
+    def minKey(self, vertice_set, weights):
+
+        champ = sys.maxint
+        min_index = -1
+
+        for v in range(self.V):
+            # find minimum weight edge in cut
+            if weight[v] < champ and v not in vertice_set:
+                pass
+                
     def generate_vertices(self):
 
         verts = []
